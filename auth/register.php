@@ -5,165 +5,255 @@ require_once "../includes/header.php";
 
 <style>
     .register-page {
-        padding: 40px 0 70px;
-        background: linear-gradient(180deg, #F6F8FC 0%, #FFF7F7 100%);
+        padding: 60px 0 90px;
+        background: linear-gradient(135deg, #FFF5F5, #FFFDF9, #F5F7FB, #FFF9F5);
+        background-size: 400% 400%;
+        animation: gradient-bg 18s ease infinite;
         min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Các đốm sáng trôi nổi */
+    .bg-orbs {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .bg-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.18;
+        mix-blend-mode: multiply;
+        will-change: transform;
+    }
+
+    .bg-orb-1 {
+        width: 450px;
+        height: 450px;
+        background: radial-gradient(circle, #E53935 0%, transparent 80%);
+        top: 10%;
+        left: 5%;
+        animation: float-orb-1 25s infinite alternate ease-in-out;
+    }
+
+    .bg-orb-2 {
+        width: 550px;
+        height: 550px;
+        background: radial-gradient(circle, #FFA000 0%, transparent 80%);
+        bottom: 5%;
+        right: 10%;
+        animation: float-orb-2 30s infinite alternate ease-in-out;
+    }
+
+    .bg-orb-3 {
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, #FF5252 0%, transparent 80%);
+        top: 40%;
+        right: 35%;
+        animation: float-orb-3 20s infinite alternate ease-in-out;
     }
 
     .register-container {
-        max-width: 1180px;
+        max-width: 1440px;
+        width: 100%;
         margin: 0 auto;
-        padding: 0 16px;
+        padding: 0 24px;
+        position: relative;
+        z-index: 2;
     }
 
     .register-grid {
         display: grid;
-        grid-template-columns: 1fr 520px;
-        gap: 28px;
-        align-items: stretch;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 40px;
+        align-items: center;
     }
 
+    /* Showcase bên trái */
     .register-showcase {
         position: relative;
         overflow: hidden;
-        border-radius: 28px;
-        padding: 40px;
-        min-height: 680px;
+        border-radius: 32px;
+        padding: 50px;
+        min-height: 740px;
         background:
-            linear-gradient(135deg, rgba(229, 57, 53, 0.94), rgba(255, 179, 0, 0.88)),
+            linear-gradient(135deg, rgba(198, 40, 40, 0.92) 0%, rgba(229, 57, 53, 0.85) 50%, rgba(255, 143, 0, 0.8) 100%),
             url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
-        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
+        background-blend-mode: multiply;
+        box-shadow: 0 30px 70px rgba(229, 57, 53, 0.18);
         color: #fff;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        transition: transform 0.5s ease;
     }
 
     .register-showcase::before {
         content: "";
         position: absolute;
-        top: -80px;
-        right: -80px;
-        width: 220px;
-        height: 220px;
+        top: -60px;
+        right: -60px;
+        width: 250px;
+        height: 250px;
         border-radius: 50%;
-        background: rgba(255,255,255,0.10);
+        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+        pointer-events: none;
     }
 
     .register-showcase::after {
         content: "";
         position: absolute;
-        bottom: -100px;
-        left: -100px;
-        width: 260px;
-        height: 260px;
+        bottom: -80px;
+        left: -80px;
+        width: 300px;
+        height: 300px;
         border-radius: 50%;
-        background: rgba(255,255,255,0.08);
+        background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+        pointer-events: none;
     }
 
     .register-showcase-content,
     .register-showcase-footer {
         position: relative;
-        z-index: 1;
+        z-index: 2;
     }
 
     .register-badge {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 9px 14px;
+        padding: 10px 18px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.16);
-        border: 1px solid rgba(255,255,255,0.18);
-        font-size: 13px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 14px;
         font-weight: 700;
-        margin-bottom: 18px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        animation: float-slow 4s ease-in-out infinite alternate;
     }
 
     .register-showcase h1 {
-        font-size: clamp(34px, 5vw, 52px);
-        line-height: 1.08;
-        margin: 0 0 16px;
+        font-size: clamp(36px, 4.5vw, 48px);
+        line-height: 1.15;
+        margin: 0 0 20px;
         font-weight: 800;
-        letter-spacing: -0.8px;
-        max-width: 560px;
+        letter-spacing: -1px;
+        max-width: 600px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
 
     .register-showcase p {
         margin: 0;
-        max-width: 560px;
-        color: rgba(255,255,255,0.92);
+        max-width: 580px;
+        color: rgba(255, 255, 255, 0.95);
         font-size: 17px;
         line-height: 1.7;
+        margin-bottom: 30px;
     }
 
     .register-feature-list {
-        margin-top: 28px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-        max-width: 620px;
+        gap: 16px;
+        max-width: 650px;
     }
 
     .register-feature-item {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 14px 16px;
-        border-radius: 18px;
-        background: rgba(255,255,255,0.14);
-        border: 1px solid rgba(255,255,255,0.14);
-        backdrop-filter: blur(4px);
-        font-size: 14px;
+        gap: 14px;
+        padding: 16px 20px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        font-size: 14.5px;
         font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .register-feature-item:hover {
+        transform: translateY(-4px) scale(1.02);
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
     }
 
     .register-feature-item span.icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 12px;
-        background: rgba(255,255,255,0.18);
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
+        font-size: 18px;
         flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
 
     .register-stat-row {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        margin-top: 28px;
+        gap: 16px;
+        margin-top: 30px;
     }
 
     .register-stat {
-        background: rgba(255,255,255,0.14);
-        border: 1px solid rgba(255,255,255,0.14);
-        border-radius: 20px;
-        padding: 18px;
-        backdrop-filter: blur(4px);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 22px;
+        padding: 20px 16px;
+        backdrop-filter: blur(10px);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .register-stat:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     }
 
     .register-stat strong {
         display: block;
-        font-size: 26px;
+        font-size: 28px;
         font-weight: 800;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
+        letter-spacing: -0.5px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
 
     .register-stat span {
         font-size: 13px;
-        color: rgba(255,255,255,0.9);
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
     }
 
+    /* Card Đăng ký bên phải */
     .register-card {
-        background: #FFFFFF;
-        border: 1px solid #E5E7EB;
-        border-radius: 28px;
-        padding: 34px 30px;
-        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10);
-        align-self: center;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(229, 231, 235, 0.8);
+        border-radius: 32px;
+        padding: 40px;
+        box-shadow: 0 25px 60px rgba(15, 23, 42, 0.06), 0 4px 20px rgba(15, 23, 42, 0.02);
+        backdrop-filter: blur(16px);
+        transition: all 0.3s ease;
     }
 
     .register-card-header {
@@ -173,67 +263,78 @@ require_once "../includes/header.php";
     .register-card-badge {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
+        gap: 6px;
+        padding: 6px 14px;
         border-radius: 999px;
-        background: rgba(229, 57, 53, 0.08);
+        background: rgba(229, 57, 53, 0.06);
         color: #E53935;
-        font-size: 13px;
+        font-size: 12.5px;
         font-weight: 700;
-        margin-bottom: 14px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(229, 57, 53, 0.1);
     }
 
     .register-card h2 {
-        margin: 0 0 10px;
+        margin: 0 0 8px;
         font-size: 30px;
         line-height: 1.2;
-        color: #111827;
         font-weight: 800;
-        letter-spacing: -0.4px;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     .register-card-desc {
         margin: 0;
         color: #6B7280;
         font-size: 15px;
-        line-height: 1.7;
+        line-height: 1.5;
     }
 
+    /* Alert */
     .register-alert {
-        padding: 14px 16px;
-        border-radius: 16px;
-        font-size: 14px;
+        padding: 14px 18px;
+        border-radius: 18px;
+        font-size: 14.5px;
         font-weight: 600;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
         border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        animation: slide-up 0.3s ease;
     }
 
     .register-alert.error {
-        color: #B91C1C;
-        background: #FEF2F2;
-        border-color: #FECACA;
+        color: #C2410C;
+        background: #FFF7ED;
+        border-color: #FED7AA;
     }
 
     .register-alert.success {
-        color: #166534;
+        color: #15803D;
         background: #F0FDF4;
-        border-color: #BBF7D0;
+        border-color: #DCFCE7;
     }
 
+    /* Form */
     .register-form {
         display: grid;
-        gap: 18px;
+        gap: 16px;
     }
 
     .register-field {
         display: grid;
-        gap: 8px;
+        gap: 6px;
     }
 
     .register-field label {
-        font-size: 14px;
+        font-size: 13.5px;
         font-weight: 700;
         color: #374151;
+        letter-spacing: 0.1px;
     }
 
     .register-input-wrap {
@@ -242,78 +343,161 @@ require_once "../includes/header.php";
 
     .register-input-icon {
         position: absolute;
-        left: 14px;
+        left: 18px;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 16px;
+        font-size: 17px;
         color: #9CA3AF;
         pointer-events: none;
+        transition: all 0.3s ease;
     }
 
     .register-input {
         width: 100%;
         height: 52px;
-        border: 1px solid #D1D5DB;
+        border: 1.5px solid #E5E7EB;
         border-radius: 16px;
-        padding: 0 16px 0 44px;
-        background: #FFFFFF;
+        padding: 0 16px 0 50px;
+        background: #F9FAFB;
         color: #111827;
-        font-size: 15px;
+        font-size: 14.5px;
+        font-weight: 500;
         outline: none;
-        transition: 0.25s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .register-input:focus {
         border-color: #E53935;
-        box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.10);
+        background: #FFFFFF;
+        box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.08);
+    }
+
+    .register-input-wrap:focus-within .register-input-icon {
+        color: #E53935;
+        transform: translateY(-50%) scale(1.1);
     }
 
     .register-input::placeholder {
         color: #9CA3AF;
+        font-size: 14px;
     }
 
     .register-helper {
         font-size: 12px;
-        color: #6B7280;
+        color: #9CA3AF;
         margin-top: 2px;
-        line-height: 1.5;
+        font-weight: 500;
     }
 
+    /* Button */
     .register-submit {
         width: 100%;
         height: 54px;
         border: none;
         border-radius: 16px;
-        background: linear-gradient(135deg, #E53935, #FF6B57);
+        background: linear-gradient(135deg, #E53935 0%, #FF5252 50%, #FFA000 100%);
+        background-size: 200% auto;
         color: #fff;
-        font-size: 15px;
+        font-size: 15.5px;
         font-weight: 800;
         cursor: pointer;
-        box-shadow: 0 14px 28px rgba(229, 57, 53, 0.24);
-        transition: 0.25s ease;
+        box-shadow: 0 10px 25px rgba(229, 57, 53, 0.2);
+        transition: all 0.4s ease;
         margin-top: 6px;
     }
 
     .register-submit:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 18px 34px rgba(229, 57, 53, 0.28);
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(229, 57, 53, 0.3);
+        background-position: right center;
+    }
+
+    .register-submit:active {
+        transform: translateY(0);
+        box-shadow: 0 6px 15px rgba(229, 57, 53, 0.15);
     }
 
     .register-bottom {
-        margin-top: 18px;
+        margin-top: 20px;
         text-align: center;
-        font-size: 14px;
+        font-size: 14.5px;
         color: #6B7280;
+        font-weight: 500;
     }
 
     .register-bottom a {
         color: #E53935;
         font-weight: 700;
         text-decoration: none;
+        position: relative;
+        padding-bottom: 2px;
+        transition: color 0.3s ease;
+    }
+
+    .register-bottom a::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background-color: #E53935;
+        transition: width 0.3s ease;
     }
 
     .register-bottom a:hover {
-        text-decoration: underline;
+        color: #D32F2F;
+    }
+
+    .register-bottom a:hover::after {
+        width: 100%;
+    }
+
+    /* Keyframes */
+    @keyframes gradient-bg {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes float-orb-1 {
+        0% { transform: translate3d(0, 0, 0) scale(1); }
+        50% { transform: translate3d(60px, 40px, 0) scale(1.1); }
+        100% { transform: translate3d(-30px, 80px, 0) scale(0.95); }
+    }
+
+    @keyframes float-orb-2 {
+        0% { transform: translate3d(0, 0, 0) scale(1); }
+        50% { transform: translate3d(-80px, -40px, 0) scale(0.9); }
+        100% { transform: translate3d(40px, 60px, 0) scale(1.1); }
+    }
+
+    @keyframes float-orb-3 {
+        0% { transform: translate3d(0, 0, 0) scale(1); }
+        50% { transform: translate3d(40px, -60px, 0) scale(1.05); }
+        100% { transform: translate3d(-40px, 30px, 0) scale(0.95); }
+    }
+
+    @keyframes float-slow {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-8px); }
+    }
+
+    @keyframes slide-up {
+        0% { opacity: 0; transform: translateY(10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .register-grid {
+            gap: 30px;
+        }
+        
+        .register-showcase {
+            padding: 40px;
+            min-height: 680px;
+        }
     }
 
     @media (max-width: 1024px) {
@@ -323,33 +507,44 @@ require_once "../includes/header.php";
 
         .register-showcase {
             min-height: auto;
-            padding: 34px 26px;
+            padding: 40px 30px;
+            border-radius: 28px;
         }
 
         .register-card {
             max-width: 620px;
             width: 100%;
             margin: 0 auto;
+            padding: 40px 30px;
         }
     }
 
     @media (max-width: 640px) {
         .register-page {
-            padding: 24px 0 50px;
+            padding: 30px 0 60px;
+        }
+
+        .register-container {
+            padding: 0 16px;
         }
 
         .register-showcase {
             border-radius: 24px;
-            padding: 26px 20px;
+            padding: 30px 20px;
         }
 
-        .register-feature-list,
+        .register-feature-list {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
         .register-stat-row {
             grid-template-columns: 1fr;
+            gap: 12px;
         }
 
         .register-card {
-            padding: 24px 18px;
+            padding: 30px 20px;
             border-radius: 24px;
         }
 
@@ -360,33 +555,40 @@ require_once "../includes/header.php";
 </style>
 
 <div class="register-page">
+    <!-- Background Orbs -->
+    <div class="bg-orbs">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+    </div>
+
     <div class="register-container">
         <div class="register-grid">
             <div class="register-showcase">
                 <div class="register-showcase-content">
-                    <div class="register-badge">✨ Nền tảng quản lý bán hàng hiện đại</div>
-                    <h1>Tạo tài khoản để bắt đầu với hệ thống Lotte Mart</h1>
+                    <div class="register-badge">✨ Nền tảng mua sắm tiện ích</div>
+                    <h1>Tạo tài khoản để bắt đầu với Lotte Mart</h1>
                     <p>
-                        Đăng ký tài khoản khách hàng để mua sắm nhanh hơn, quản lý đơn hàng dễ hơn,
-                        theo dõi giỏ hàng thuận tiện và trải nghiệm hệ thống bán hàng hiện đại, trực quan.
+                        Đăng ký tài khoản khách hàng để trải nghiệm mua sắm nhanh chóng, tích lũy điểm thưởng,
+                        nhận các khuyến mãi độc quyền và theo dõi hành trình đơn hàng thuận tiện.
                     </p>
 
                     <div class="register-feature-list">
                         <div class="register-feature-item">
                             <span class="icon">🛒</span>
-                            <span>Mua sắm và đặt hàng nhanh chóng</span>
+                            <span>Mua sắm và thanh toán dễ dàng</span>
                         </div>
                         <div class="register-feature-item">
                             <span class="icon">📦</span>
-                            <span>Theo dõi đơn hàng dễ dàng</span>
+                            <span>Theo dõi trạng thái đơn hàng chi tiết</span>
                         </div>
                         <div class="register-feature-item">
                             <span class="icon">💬</span>
-                            <span>Hỗ trợ chat cùng nhân viên</span>
+                            <span>Trực tiếp kết nối hỗ trợ 24/7</span>
                         </div>
                         <div class="register-feature-item">
-                            <span class="icon">⭐</span>
-                            <span>Lưu sản phẩm và đánh giá tiện lợi</span>
+                            <span class="icon">🎁</span>
+                            <span>Ưu đãi thành viên cực kỳ hấp dẫn</span>
                         </div>
                     </div>
                 </div>
@@ -395,15 +597,15 @@ require_once "../includes/header.php";
                     <div class="register-stat-row">
                         <div class="register-stat">
                             <strong>12K+</strong>
-                            <span>Đơn hàng đã xử lý</span>
+                            <span>Đơn hàng hoàn tất</span>
                         </div>
                         <div class="register-stat">
                             <strong>3K+</strong>
-                            <span>Sản phẩm đang quản lý</span>
+                            <span>Sản phẩm phong phú</span>
                         </div>
                         <div class="register-stat">
                             <strong>24/7</strong>
-                            <span>Hỗ trợ hoạt động</span>
+                            <span>Tổng đài chăm sóc</span>
                         </div>
                     </div>
                 </div>
@@ -411,22 +613,24 @@ require_once "../includes/header.php";
 
             <div class="register-card">
                 <div class="register-card-header">
-                    <div class="register-card-badge">Đăng ký tài khoản</div>
-                    <h2>Chào mừng bạn đến với Lotte Mart</h2>
+                    <div class="register-card-badge">Đăng ký thành viên</div>
+                    <h2>Đăng ký tài khoản mới</h2>
                     <p class="register-card-desc">
-                        Điền đầy đủ thông tin bên dưới để tạo tài khoản mới.
+                        Cung cấp thông tin của bạn để tạo tài khoản miễn phí.
                     </p>
                 </div>
 
                 <?php if (isset($_GET['error'])): ?>
                     <div class="register-alert error">
-                        <?php echo htmlspecialchars($_GET['error']); ?>
+                        <span>⚠️</span>
+                        <div><?php echo htmlspecialchars($_GET['error']); ?></div>
                     </div>
                 <?php endif; ?>
 
                 <?php if (isset($_GET['success'])): ?>
                     <div class="register-alert success">
-                        <?php echo htmlspecialchars($_GET['success']); ?>
+                        <span>✅</span>
+                        <div><?php echo htmlspecialchars($_GET['success']); ?></div>
                     </div>
                 <?php endif; ?>
 
@@ -434,89 +638,88 @@ require_once "../includes/header.php";
                     <div class="register-field">
                         <label>Họ và tên</label>
                         <div class="register-input-wrap">
-                            <span class="register-input-icon">👤</span>
                             <input
                                 type="text"
                                 name="full_name"
                                 required
                                 class="register-input"
-                                placeholder="Nhập họ và tên của bạn"
+                                placeholder="Nguyễn Văn A"
                             >
+                            <span class="register-input-icon">👤</span>
                         </div>
                     </div>
 
                     <div class="register-field">
-                        <label>Email</label>
+                        <label>Địa chỉ Email (Gmail)</label>
                         <div class="register-input-wrap">
-                            <span class="register-input-icon">✉️</span>
                             <input
                                 type="email"
                                 name="email"
                                 required
                                 pattern="^[A-Za-z0-9._%+-]+@gmail\.com$"
-            
-                                placeholder="example@gmail.com"
                                 class="register-input"
+                                placeholder="username@gmail.com"
                             >
+                            <span class="register-input-icon">✉️</span>
                         </div>
-            
+                        <div class="register-helper">Hệ thống chỉ chấp nhận định dạng Gmail (ví dụ: example@gmail.com)</div>
                     </div>
 
                     <div class="register-field">
                         <label>Số điện thoại</label>
                         <div class="register-input-wrap">
-                            <span class="register-input-icon">📞</span>
                             <input
                                 type="text"
                                 name="phone"
                                 required
                                 pattern="^0[0-9]{9}$"
                                 maxlength="10"
-                                placeholder="0912345678"
                                 class="register-input"
+                                placeholder="0912345678"
                             >
+                            <span class="register-input-icon">📞</span>
                         </div>
-                        
+                        <div class="register-helper">Số điện thoại Việt Nam bắt đầu bằng số 0, đủ 10 chữ số</div>
                     </div>
 
                     <div class="register-field">
                         <label>Mật khẩu</label>
                         <div class="register-input-wrap">
-                            <span class="register-input-icon">🔒</span>
                             <input
                                 type="password"
                                 name="password"
                                 required
                                 minlength="6"
-                                placeholder="Nhập mật khẩu"
                                 class="register-input"
+                                placeholder="Tối thiểu 6 ký tự"
                             >
+                            <span class="register-input-icon">🔒</span>
                         </div>
                     </div>
 
                     <div class="register-field">
                         <label>Nhập lại mật khẩu</label>
                         <div class="register-input-wrap">
-                            <span class="register-input-icon">🔐</span>
                             <input
                                 type="password"
                                 name="confirm_password"
                                 required
                                 minlength="6"
-                                placeholder="Nhập lại mật khẩu"
                                 class="register-input"
+                                placeholder="Nhập lại mật khẩu"
                             >
+                            <span class="register-input-icon">🔐</span>
                         </div>
                     </div>
 
                     <button type="submit" class="register-submit">
-                        Đăng ký tài khoản
+                        Tạo tài khoản
                     </button>
                 </form>
 
                 <div class="register-bottom">
                     Đã có tài khoản?
-                    <a href="/auth/login.php">Đăng nhập</a>
+                    <a href="/auth/login.php">Đăng nhập ngay</a>
                 </div>
             </div>
         </div>

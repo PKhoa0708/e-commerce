@@ -137,7 +137,7 @@ if ($isLoggedIn) {
         --shadow:0 10px 30px rgba(15, 23, 42, 0.07);
         --shadow-hover:0 18px 40px rgba(15, 23, 42, 0.10);
         --radius:20px;
-        --container:1200px;
+        --container:1440px;
     }
 
     *{
@@ -368,9 +368,10 @@ if ($isLoggedIn) {
     }
 
     .lotte-home .mock-sidebar{
-        background:#162031;
-        color:#dbeafe;
-        padding:24px 18px;
+        background:#111827;
+        color:#d1d5db;
+        padding:24px 16px;
+        border-right: 1px solid rgba(255,255,255,0.05);
     }
 
     .lotte-home .mock-sidebar .brand{
@@ -378,21 +379,33 @@ if ($isLoggedIn) {
         font-size:18px;
         color:#fff;
         margin-bottom:26px;
+        display:flex;
+        align-items:center;
+        gap:8px;
     }
 
     .lotte-home .mock-side-item{
         display:flex;
         align-items:center;
         gap:12px;
-        padding:12px 14px;
-        border-radius:14px;
-        color:#d1d5db;
-        margin-bottom:10px;
+        padding:10px 12px;
+        border-radius:10px;
+        color:#9ca3af;
+        margin-bottom:6px;
+        font-size:13px;
+        font-weight:500;
+        transition: all 0.2s ease;
+    }
+
+    .lotte-home .mock-side-item:hover{
+        color:#fff;
+        background:rgba(255,255,255,0.05);
     }
 
     .lotte-home .mock-side-item.active{
-        background:rgba(43,127,255,.18);
-        color:#fff;
+        background:rgba(229,57,53,0.15);
+        color:#ff8a65;
+        font-weight:600;
     }
 
     .lotte-home .mock-main{
@@ -409,21 +422,27 @@ if ($isLoggedIn) {
 
     .lotte-home .mock-stat{
         background:#fff;
-        border-radius:18px;
-        padding:16px;
+        border-radius:16px;
+        padding:14px 16px;
         border:1px solid #edf2f7;
-        box-shadow:0 8px 18px rgba(15,23,42,.05);
+        box-shadow:0 6px 16px rgba(15,23,42,.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .lotte-home .mock-stat:hover{
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
     }
 
     .lotte-home .mock-stat .small{
         color:var(--muted);
-        font-size:13px;
-        margin-bottom:8px;
+        font-size:12px;
+        margin-bottom:6px;
     }
 
     .lotte-home .mock-stat .big{
         font-weight:800;
-        font-size:24px;
+        font-size:22px;
     }
 
     .lotte-home .mock-panels{
@@ -467,18 +486,50 @@ if ($isLoggedIn) {
         justify-content:space-between;
         align-items:center;
         background:#f8fafc;
-        padding:12px;
+        padding:10px 12px;
         border-radius:12px;
+        font-size:12px;
+        gap:8px;
+        transition: background-color 0.2s ease;
+    }
+
+    .lotte-home .mini-item:hover{
+        background:#f1f5f9;
+    }
+
+    .lotte-home .mini-item span{
+        font-weight:600;
+        color:var(--muted);
+    }
+
+    .lotte-home .mini-item strong{
+        font-size:11px;
+        font-weight:700;
+        padding:3px 10px;
+        border-radius:999px;
+        white-space:nowrap;
+    }
+
+    .lotte-home .mini-item strong.status-success{
+        color:#15803d;
+        background:#f0fdf4;
+    }
+
+    .lotte-home .mini-item strong.status-warning{
+        color:#b45309;
+        background:#fffbeb;
     }
 
     .lotte-home .floating-card{
         position:absolute;
-        background:#fff;
-        border:1px solid rgba(229,231,235,.8);
-        border-radius:18px;
-        box-shadow:var(--shadow);
-        padding:14px 16px;
+        background:rgba(255,255,255,0.85);
+        backdrop-filter:blur(12px);
+        border:1px solid rgba(255,255,255,0.6);
+        border-radius:20px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+        padding:16px 20px;
         min-width:180px;
+        will-change: transform;
     }
 
     .lotte-home .floating-card .label{
@@ -493,13 +544,27 @@ if ($isLoggedIn) {
     }
 
     .lotte-home .floating-card.one{
-        left:-18px;
-        bottom:48px;
+        left:-24px;
+        bottom:60px;
+        animation: float 6s ease-in-out infinite;
     }
 
     .lotte-home .floating-card.two{
-        right:-12px;
-        top:70px;
+        right:-24px;
+        top:110px;
+        animation: float-delayed 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @keyframes float-delayed {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(8px); }
+        100% { transform: translateY(0px); }
     }
 
     .lotte-home .grid-4{
@@ -733,8 +798,9 @@ if ($isLoggedIn) {
 
     .lotte-home .reveal{
         opacity:0;
-        transform:translateY(22px);
-        transition:all .7s ease;
+        transform:translateY(24px);
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: opacity, transform;
     }
 
     .lotte-home .reveal.active{
@@ -869,7 +935,7 @@ if ($isLoggedIn) {
 
                             <div class="mock-body">
                                 <aside class="mock-sidebar">
-                                    <div class="brand">Lotte Admin</div>
+                                    <div class="brand"><span style="font-size:16px;">🛒</span> Lotte Admin</div>
                                     <div class="mock-side-item active"><i class="fa-solid fa-house"></i> Tổng quan</div>
                                     <div class="mock-side-item"><i class="fa-solid fa-box"></i> Sản phẩm</div>
                                     <div class="mock-side-item"><i class="fa-solid fa-warehouse"></i> Kho hàng</div>
@@ -909,9 +975,9 @@ if ($isLoggedIn) {
                                         <div class="mock-panel">
                                             <strong>Đơn gần đây</strong>
                                             <div class="mini-list">
-                                                <div class="mini-item"><span>#DH1025</span><strong>Đã thanh toán</strong></div>
-                                                <div class="mini-item"><span>#DH1026</span><strong>Đang xử lý</strong></div>
-                                                <div class="mini-item"><span>#DH1027</span><strong>Hoàn thành</strong></div>
+                                                <div class="mini-item"><span>#DH1025</span><strong class="status-success">Đã thanh toán</strong></div>
+                                                <div class="mini-item"><span>#DH1026</span><strong class="status-warning">Đang xử lý</strong></div>
+                                                <div class="mini-item"><span>#DH1027</span><strong class="status-success">Hoàn thành</strong></div>
                                             </div>
                                         </div>
                                     </div>

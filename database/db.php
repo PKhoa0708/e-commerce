@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 try {
-    $mongoClient = new MongoDB\Client("mongodb+srv://banhang_db:acenyak123@cluster0.r276n7c.mongodb.net/?appName=Cluster0&tlsAllowInvalidCertificates=true");
+    $mongoClient = new MongoDB\Client("mongodb://localhost:27017");
+    //$mongoClient = new MongoDB\Client("mongodb+srv://banhang_db:acenyak123@cluster0.r276n7c.mongodb.net/?appName=Cluster0&tlsAllowInvalidCertificates=true");
     $db = $mongoClient->lotte_mart;
     $conn = $db; // alias to match $conn variable name used in many places
 } catch (Exception $e) {
