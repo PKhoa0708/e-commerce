@@ -1,0 +1,80 @@
+<%- await include('../../../partials/header') %>
+
+<h2>Chat với khách hàng: <%= conversation.customer_name %></h2>
+
+<div style="margin-bottom:15px;">
+    <a href="/staff/chat" style="padding:8px 12px; background:gray; color:white; text-decoration:none;">
+        Quay lại
+    </a>
+</div>
+
+<div style="border:1px solid #ccc; padding:15px; background:#fff; border-radius:6px;">
+    <div id="chat-box" style="height:400px; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-bottom:15px; background:#f9f9f9;">
+        Đang tải tin nhắn...
+    </div>
+
+    <form id="chat-form">
+        <input type="hidden" name="conversation_id" value="<%= conversation_id %>">
+
+        <div style="display:flex; gap:10px;">
+            <input
+                type="text"
+                name="message"
+                id="message"
+                placeholder="Nhập tin nhắn..."
+                required
+                style="flex:1; padding:10px;"
+            >
+            <button type="submit" style="padding:10px 16px;">Gửi</button>
+        </div>
+    </form>
+</div>
+
+<script>
+const conversationId = <%= conversation_id %>;
+const chatBox = document.getElementById('chat-box');
+const chatForm = document.getElementById('chat-form');
+const messageInput = document.getElementById('message');
+
+function loadMessages() {
+    fetch('/staff/chat/fetch?conversation_id=' + conversationId)
+        .then(response => response.text())
+        .then(data => {
+            chatBox.innerHTML = data;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(error => {
+            chatBox.innerHTML = '<p style="color:red;">Không tải được tin nhắn.</p>';
+            console.error(error);
+        });
+}
+
+chatForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(chatForm);
+
+    fetch('/staff/chat/send', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+        if (data.trim() === 'success') {
+            messageInput.value = '';
+            loadMessages();
+        } else {
+            alert('Gửi tin nhắn thất bại: ' + data);
+        }
+    })
+    .catch(error => {
+        alert('Có lỗi khi gửi tin nhắn');
+        console.error(error);
+    });
+});
+
+loadMessages();
+setInterval(loadMessages, 3000);
+</script>
+
+<%- await include('../../../partials/footer') %>

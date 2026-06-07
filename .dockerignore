@@ -3,3 +3,7 @@
 lotte_mart.sql
 scratch_list_users.php
 vendor/
+node_modules/
+php_backup/
+npm-debug.log
+.env

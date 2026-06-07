@@ -1,0 +1,185 @@
+<%- await include('../../../partials/header') %>
+
+<h2>Sửa sản phẩm</h2>
+
+<% if (error) { %>
+    <p style="color:red;"><%= error %></p>
+<% } %>
+
+<% if (success) { %>
+    <p style="color:green;"><%= success %></p>
+<% } %>
+
+<form action="/staff/products/update" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="id" value="<%= product.id %>">
+    <input type="hidden" name="old_thumbnail" value="<%= product.thumbnail || '' %>">
+
+    <div style="margin-bottom:10px;">
+        <label>Tên sản phẩm</label><br>
+        <input type="text" name="name" required value="<%= product.name %>" style="width:400px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Danh mục</label><br>
+        <select name="category_id" required style="width:400px; padding:8px;">
+            <% categories.forEach(cat => { %>
+                <option value="<%= cat.id %>" <%= (cat.id === product.category_id) ? 'selected' : '' %>><%= cat.name %></option>
+            <% }) %>
+        </select>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>SKU</label><br>
+        <input type="text" name="sku" value="<%= product.sku || '' %>" style="width:400px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Mô tả</label><br>
+        <textarea name="description" rows="5" style="width:400px; padding:8px;"><%= product.description || '' %></textarea>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Giá</label><br>
+        <input type="number" name="price" min="0" required value="<%= product.price %>" style="width:400px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Số lượng tồn kho</label><br>
+        <input type="number" name="stock_quantity" min="0" required value="<%= product.stock_quantity %>" style="width:400px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+    <label>Ảnh hiện tại</label><br>
+
+    <input type="hidden" name="delete_current_image" id="delete_current_image" value="0">
+
+    <div id="image-preview-wrapper" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+        <% if (product.thumbnail) { %>
+            <div id="current-image-box" style="border:1px solid #ccc; padding:8px; text-align:center;">
+                <img
+                    id="current-image"
+                    src="/<%= product.thumbnail %>"
+                    width="120"
+                    height="120"
+                    style="object-fit:cover; display:block;"
+                >
+                <p style="margin-top:5px; font-size:13px;">Ảnh hiện tại</p>
+            </div>
+        <% } else { %>
+            <div id="no-image-text" style="padding:8px; color:#666;">
+                Chưa có ảnh hiện tại
+            </div>
+        <% } %>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+        <button
+            type="button"
+            onclick="deleteCurrentImage()"
+            style="padding:6px 12px; background:red; color:white; border:none; cursor:pointer;"
+        >
+            Xóa
+        </button>
+
+        <input
+            type="file"
+            name="thumbnail_files"
+            id="thumbnail_files"
+            accept="image/*"
+            multiple
+            onchange="previewSelectedImages(event)"
+        >
+    </div>
+
+    <small style="display:block; margin-top:8px; color:#555;">
+        Nếu không bấm Xóa, ảnh hiện tại sẽ được giữ nguyên. Ảnh mới chọn sẽ được thêm nối tiếp phía sau.
+    </small>
+</div>
+
+<script>
+function deleteCurrentImage() {
+    const currentBox = document.getElementById('current-image-box');
+    const deleteInput = document.getElementById('delete_current_image');
+    const noImageText = document.getElementById('no-image-text');
+
+    if (currentBox) {
+        currentBox.remove();
+    }
+
+    if (!noImageText) {
+        const wrapper = document.getElementById('image-preview-wrapper');
+        const text = document.createElement('div');
+        text.id = 'no-image-text';
+        text.style.padding = '8px';
+        text.style.color = '#666';
+        text.innerText = 'Đã đánh dấu xóa ảnh hiện tại';
+        wrapper.prepend(text);
+    }
+
+    deleteInput.value = '1';
+}
+
+function previewSelectedImages(event) {
+    const files = event.target.files;
+    const wrapper = document.getElementById('image-preview-wrapper');
+
+    // Remove old new previews
+    const oldNewPreviews = document.querySelectorAll('.new-preview-item');
+    oldNewPreviews.forEach(item => item.remove());
+
+    if (!files || files.length === 0) return;
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        if (!file.type.startsWith('image/')) continue;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const box = document.createElement('div');
+            box.className = 'new-preview-item';
+            box.style.border = '1px solid #ccc';
+            box.style.padding = '8px';
+            box.style.textAlign = 'center';
+
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.width = 120;
+            img.height = 120;
+            img.style.objectFit = 'cover';
+            img.style.display = 'block';
+
+            const text = document.createElement('p');
+            text.style.marginTop = '5px';
+            text.style.fontSize = '13px';
+
+            const deleteInput = document.getElementById('delete_current_image').value;
+
+            if (deleteInput === '1') {
+                text.innerText = (i === 0) ? 'Ảnh chính mới' : 'Ảnh phụ mới';
+            } else {
+                text.innerText = 'Ảnh thêm mới';
+            }
+
+            box.appendChild(img);
+            box.appendChild(text);
+            wrapper.appendChild(box);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+</script>
+
+    <div style="margin-bottom:10px;">
+        <label>Trạng thái</label><br>
+        <select name="status" required style="width:400px; padding:8px;">
+            <option value="active" <%= (product.status === 'active') ? 'selected' : '' %>>Hiển thị</option>
+            <option value="inactive" <%= (product.status === 'inactive') ? 'selected' : '' %>>Ẩn</option>
+        </select>
+    </div>
+
+    <button type="submit" style="padding:10px 15px;">Cập nhật</button>
+    <a href="/staff/products">Quay lại</a>
+</form>
+
+<%- await include('../../../partials/footer') %>

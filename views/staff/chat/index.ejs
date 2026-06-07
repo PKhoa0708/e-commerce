@@ -1,0 +1,44 @@
+<%- await include('../../../partials/header') %>
+
+<h2>Danh sách cuộc trò chuyện</h2>
+
+<% if (conversations.length > 0) { %>
+    <table border="1" cellpadding="10" cellspacing="0" width="100%" style="border-collapse:collapse;">
+        <tr style="background:#f2f2f2;">
+            <th>ID</th>
+            <th>Khách hàng</th>
+            <th>Nhân viên phụ trách</th>
+            <th>Tin nhắn gần nhất</th>
+            <th>Hành động</th>
+        </tr>
+
+        <% conversations.forEach(row => { %>
+            <tr>
+                <td><%= row.id %></td>
+                <td><%= row.customer_name || '' %></td>
+                <td>
+                    <% if (row.staff_id) { %>
+                        <% if (Number(row.staff_id) === Number(staff_id)) { %>
+                            Bạn
+                        <% } else { %>
+                            Đã có nhân viên khác nhận
+                        <% } %>
+                    <% } else { %>
+                        Chưa có
+                    <% } %>
+                </td>
+                <td><%= row.last_message ? row.last_message : 'Chưa có tin nhắn' %></td>
+                <td>
+                    <% if (!row.staff_id) { %>
+                        <a href="/staff/chat/assign?id=<%= row.id %>">Nhận chat</a> |
+                    <% } %>
+                    <a href="/staff/chat/detail?id=<%= row.id %>">Xem chat</a>
+                </td>
+            </tr>
+        <% }) %>
+    </table>
+<% } else { %>
+    <p>Chưa có cuộc trò chuyện nào.</p>
+<% } %>
+
+<%- await include('../../../partials/footer') %>

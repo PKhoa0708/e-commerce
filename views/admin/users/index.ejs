@@ -1,0 +1,60 @@
+<%- await include('../../../partials/header') %>
+
+<h2>Quản lý tài khoản người dùng</h2>
+
+<% if (success) { %>
+    <p style="color: green;"><%= success %></p>
+<% } %>
+
+<% if (error) { %>
+    <p style="color: red;"><%= error %></p>
+<% } %>
+
+<div style="margin: 15px 0;">
+    <a href="/admin/users/create" style="padding:10px 15px; background:blue; color:white; text-decoration:none;">
+        + Thêm tài khoản
+    </a>
+    <a href="/admin/dashboard" style="padding:10px 15px; background:gray; color:white; text-decoration:none; margin-left:10px;">
+        Quay lại
+    </a>
+</div>
+
+<table border="1" cellpadding="10" cellspacing="0" width="100%">
+    <tr style="background:#f2f2f2;">
+        <th>ID</th>
+        <th>Họ tên</th>
+        <th>Email</th>
+        <th>SĐT</th>
+        <th>Vai trò</th>
+        <th>Trạng thái</th>
+        <th>Ngày tạo</th>
+        <th>Hành động</th>
+    </tr>
+
+    <% users.forEach(user => { %>
+        <tr>
+            <td><%= user.id %></td>
+            <td><%= user.full_name %></td>
+            <td><%= user.email %></td>
+            <td><%= user.phone %></td>
+            <td><%= user.role %></td>
+            <td>
+                <% if (user.status === 'active') { %>
+                    <span style="color:green;">Đang hoạt động</span>
+                <% } else { %>
+                    <span style="color:red;">Đã khóa</span>
+                <% } %>
+            </td>
+            <td><%= formatDate(user.created_at) %></td>
+            <td>
+                <a href="/admin/users/edit?id=<%= user.id %>">Sửa</a> |
+                <a href="/admin/users/toggle-status?id=<%= user.id %>"
+                   onclick="return confirm('Bạn có chắc muốn thay đổi trạng thái tài khoản này?');">
+                    <%= user.status === 'active' ? 'Khóa' : 'Mở khóa' %>
+                </a>
+            </td>
+        </tr>
+    <% }) %>
+</table>
+
+<%- await include('../../../partials/footer') %>

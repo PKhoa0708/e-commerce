@@ -1,30 +1,19 @@
-FROM php:8.2-apache
-
-# Cài đặt các công cụ cần thiết và thư viện OpenSSL để cài extension mongodb
-RUN apt-get update && apt-get install -y \
-    libssl-dev \
-    unzip \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Cài đặt extension mongodb cho PHP
-RUN pecl install mongodb && docker-php-ext-enable mongodb
-
-# Kích hoạt module rewrite của Apache (nếu cần)
-RUN a2enmod rewrite
-
-# Copy toàn bộ mã nguồn vào thư mục public của Apache
-COPY . /var/www/html/
+FROM node:20-alpine
 
 # Thiết lập thư mục làm việc
-WORKDIR /var/www/html/
+WORKDIR /app
 
-# Sao chép Composer từ ảnh chính thức và cài đặt dependencies
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-interaction --optimize-autoloader
+# Sao chép package.json và package-lock.json để cài đặt dependencies trước
+COPY package*.json ./
 
-# Phân quyền cho Apache đọc ghi file
-RUN chown -R www-data:www-data /var/www/html
+# Cài đặt dependencies cho môi trường production
+RUN npm install --production
 
-# Mở port 80 cho web
-EXPOSE 80
+# Sao chép toàn bộ mã nguồn vào container
+COPY . .
+
+# Mở port 3000 cho ứng dụng Node.js
+EXPOSE 3000
+
+# Lệnh khởi động ứng dụng
+CMD ["npm", "start"]

@@ -1,0 +1,189 @@
+<%- await include('../../../partials/header') %>
+
+<style>
+    body { font-family: Arial, sans-serif; }
+    h2, h3 { margin-bottom: 10px; }
+    .btn {
+        display: inline-block;
+        padding: 8px 12px;
+        text-decoration: none;
+        border: 1px solid #ccc;
+        background: #f5f5f5;
+        color: #000;
+        border-radius: 4px;
+        margin-right: 8px;
+    }
+    .section {
+        margin-bottom: 25px;
+        padding: 15px;
+        background: #fafafa;
+        border: 1px solid #ddd;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+    }
+    table th, table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+    table th {
+        background: #f3f3f3;
+    }
+    .form-inline {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 10px;
+    }
+    .form-inline input, .form-inline select, .form-inline textarea, .form-inline button {
+        padding: 8px;
+    }
+    .msg {
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+    }
+    .msg-success { background: #d4edda; color: #155724; }
+    .msg-error { background: #f8d7da; color: #721c24; }
+</style>
+
+<%
+function formatMoney(amount) {
+    return Number(amount || 0).toLocaleString('vi-VN') + ' đ';
+}
+
+function canCancelOrder(status) {
+    return ['Chờ xác nhận', 'Đã xác nhận', 'Đang chuẩn bị'].includes(status);
+}
+
+function canConfirmOrder(status) {
+    return status === 'Chờ xác nhận';
+}
+
+const order_status_options = ['Đã xác nhận', 'Đang chuẩn bị', 'Đang giao', 'Đã giao', 'Đã hoàn thành', 'Đã hủy'];
+const payment_status_options = ['Chưa thanh toán', 'Đã thanh toán'];
+%>
+
+<h2>Chi tiết đơn hàng #<%= order.order_code %></h2>
+
+<a class="btn" href="/staff/orders">← Quay lại danh sách</a>
+
+<% if (success) { %>
+    <div class="msg msg-success"><%= success %></div>
+<% } %>
+
+<% if (error) { %>
+    <div class="msg msg-error"><%= error %></div>
+<% } %>
+
+<div class="section">
+    <h3>Thông tin đơn hàng</h3>
+    <p><strong>Mã đơn:</strong> <%= order.order_code %></p>
+    <p><strong>Khách hàng:</strong> <%= order.customer_name || '' %></p>
+    <p><strong>Email khách:</strong> <%= order.customer_email || '' %></p>
+    <p><strong>Người nhận:</strong> <%= order.receiver_name %></p>
+    <p><strong>Số điện thoại:</strong> <%= order.receiver_phone %></p>
+    <p><strong>Địa chỉ giao hàng:</strong> <%= order.shipping_address %></p>
+    <p><strong>Ghi chú:</strong> <%= order.note || '' %></p>
+    <p><strong>Phương thức thanh toán:</strong> <%= order.payment_method %></p>
+    <p><strong>Trạng thái thanh toán:</strong> <%= current_payment_status %></p>
+    <p><strong>Trạng thái đơn hàng:</strong> <%= order.order_status %></p>
+    <p><strong>Tạm tính:</strong> <%= formatMoney(order.subtotal) %></p>
+    <p><strong>Phí ship:</strong> <%= formatMoney(order.shipping_fee) %></p>
+    <p><strong>Tổng tiền:</strong> <%= formatMoney(order.total_amount) %></p>
+    <p><strong>Ngày tạo:</strong> <%= formatDate(order.created_at) %></p>
+    <p><strong>Cập nhật lần cuối:</strong> <%= formatDate(order.updated_at) %></p>
+
+    <% if (order.cancel_reason) { %>
+        <p><strong>Lý do hủy:</strong> <%= order.cancel_reason %></p>
+    <% } %>
+</div>
+
+<div class="section">
+    <h3>Sản phẩm trong đơn</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Tên sản phẩm</th>
+                <th>Đơn giá</th>
+                <th>Số lượng</th>
+                <th>Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (items.length > 0) { %>
+                <% items.forEach(item => { %>
+                    <tr>
+                        <td><%= item.product_name %></td>
+                        <td><%= formatMoney(item.product_price) %></td>
+                        <td><%= Number(item.quantity) %></td>
+                        <td><%= formatMoney(item.subtotal) %></td>
+                    </tr>
+                <% }) %>
+            <% } else { %>
+                <tr>
+                    <td colspan="4">Không có sản phẩm.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h3>Thanh toán</h3>
+    <% if (payment) { %>
+        <p><strong>Phương thức:</strong> <%= payment.payment_method %></p>
+        <p><strong>Số tiền:</strong> <%= formatMoney(payment.amount) %></p>
+        <p><strong>Trạng thái:</strong> <%= current_payment_status %></p>
+        <p><strong>Ngày thanh toán:</strong> <%= formatDate(payment.paid_at || null) %></p>
+        <p><strong>Ghi chú:</strong> <%= payment.note || '' %></p>
+        <p><strong>Người cập nhật:</strong> <%= payment.updated_by_name || '' %></p>
+    <% } else { %>
+        <p>Chưa có bản ghi thanh toán.</p>
+    <% } %>
+
+    <form class="form-inline" method="POST" action="/staff/orders/update-payment">
+        <input type="hidden" name="order_id" value="<%= order.id %>">
+        <select name="payment_status" required>
+            <% payment_status_options.forEach(s => { %>
+                <option value="<%= s %>" <%= (current_payment_status === s) ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+        </select>
+        <input type="text" name="note" placeholder="Ghi chú thanh toán">
+        <button type="submit">Cập nhật thanh toán</button>
+    </form>
+</div>
+
+<div class="section">
+    <h3>Thao tác đơn hàng</h3>
+
+    <% if (canConfirmOrder(order.order_status)) { %>
+        <form method="POST" action="/staff/orders/confirm" style="display:inline-block; margin-bottom:10px;">
+            <input type="hidden" name="order_id" value="<%= order.id %>">
+            <button type="submit">Xác nhận đơn hàng</button>
+        </form>
+    <% } %>
+
+    <form class="form-inline" method="POST" action="/staff/orders/update-status">
+        <input type="hidden" name="order_id" value="<%= order.id %>">
+        <select name="order_status" required>
+            <% order_status_options.forEach(s => { %>
+                <option value="<%= s %>" <%= (order.order_status === s) ? 'selected' : '' %>><%= s %></option>
+            <% }) %>
+        </select>
+        <button type="submit">Cập nhật trạng thái đơn</button>
+    </form>
+
+    <% if (canCancelOrder(order.order_status)) { %>
+        <form method="POST" action="/staff/orders/cancel" style="margin-top:15px;">
+            <input type="hidden" name="order_id" value="<%= order.id %>">
+            <textarea name="cancel_reason" rows="3" cols="50" placeholder="Nhập lý do hủy đơn" required></textarea><br>
+            <button type="submit" onclick="return confirm('Bạn có chắc muốn hủy đơn hàng này không?');">Hủy đơn hàng</button>
+        </form>
+    <% } %>
+</div>
+
+<%- await include('../../../partials/footer') %>

@@ -1,0 +1,56 @@
+<%- await include('../../../partials/header') %>
+
+<h2>Thêm tài khoản mới</h2>
+
+<% if (error) { %>
+    <p style="color:red;"><%= error %></p>
+<% } %>
+
+<form action="/admin/users/store" method="POST">
+    <div style="margin-bottom:10px;">
+        <label>Họ và tên</label><br>
+        <input type="text" name="full_name" required style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Email</label><br>
+        <input type="email" name="email" required style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Số điện thoại</label><br>
+        <input type="text" name="phone" style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Địa chỉ</label><br>
+        <input type="text" name="address" style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Mật khẩu</label><br>
+        <input type="password" name="password" required style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Vai trò</label><br>
+        <select name="role" required style="width:350px; padding:8px;">
+            <option value="customer">Khách hàng</option>
+            <option value="staff">Nhân viên</option>
+            <option value="admin">Admin</option>
+        </select>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Trạng thái</label><br>
+        <select name="status" required style="width:350px; padding:8px;">
+            <option value="active">Hoạt động</option>
+            <option value="blocked">Khóa</option>
+        </select>
+    </div>
+
+    <button type="submit" style="padding:10px 15px;">Lưu</button>
+    <a href="/admin/users">Quay lại</a>
+</form>
+
+<%- await include('../../../partials/footer') %>

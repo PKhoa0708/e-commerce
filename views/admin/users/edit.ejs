@@ -1,0 +1,58 @@
+<%- await include('../../../partials/header') %>
+
+<h2>Cập nhật tài khoản</h2>
+
+<% if (error) { %>
+    <p style="color:red;"><%= error %></p>
+<% } %>
+
+<form action="/admin/users/update" method="POST">
+    <input type="hidden" name="id" value="<%= user.id %>">
+
+    <div style="margin-bottom:10px;">
+        <label>Họ và tên</label><br>
+        <input type="text" name="full_name" required value="<%= user.full_name %>" style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Email</label><br>
+        <input type="email" name="email" required value="<%= user.email %>" style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Số điện thoại</label><br>
+        <input type="text" name="phone" value="<%= user.phone || '' %>" style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Địa chỉ</label><br>
+        <input type="text" name="address" value="<%= user.address || '' %>" style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Mật khẩu mới</label><br>
+        <input type="password" name="password" style="width:350px; padding:8px;">
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Vai trò</label><br>
+        <select name="role" required style="width:350px; padding:8px;">
+            <option value="customer" <%= (user.role === 'customer') ? 'selected' : '' %>>Khách hàng</option>
+            <option value="staff" <%= (user.role === 'staff') ? 'selected' : '' %>>Nhân viên</option>
+            <option value="admin" <%= (user.role === 'admin') ? 'selected' : '' %>>Admin</option>
+        </select>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Trạng thái</label><br>
+        <select name="status" required style="width:350px; padding:8px;">
+            <option value="active" <%= (user.status === 'active') ? 'selected' : '' %>>Hoạt động</option>
+            <option value="blocked" <%= (user.status === 'blocked') ? 'selected' : '' %>>Khóa</option>
+        </select>
+    </div>
+
+    <button type="submit" style="padding:10px 15px;">Cập nhật</button>
+    <a href="/admin/users">Quay lại</a>
+</form>
+
+<%- await include('../../../partials/footer') %>

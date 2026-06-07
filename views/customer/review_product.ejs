@@ -1,0 +1,282 @@
+<%- await include('../partials/header') %>
+
+<style>
+    .review-page-container {
+        max-width: 700px;
+        margin: 40px auto;
+        background: #fff;
+        border: 1px solid #E5E7EB;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+    .review-page-container h2 {
+        margin-top: 0;
+        font-weight: 800;
+        color: #111827;
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        font-weight: 700;
+        font-size: 14px;
+        text-decoration: none;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #E53935, #FF6B57);
+        color: #fff;
+        box-shadow: 0 10px 20px rgba(229, 57, 53, 0.15);
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: #F3F4F6;
+        color: #374151;
+        border: 1px solid #E5E7EB;
+    }
+    .btn-secondary:hover {
+        background: #E5E7EB;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 700;
+        color: #374151;
+        font-size: 14px;
+    }
+    textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #D1D5DB;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 14px;
+        resize: vertical;
+        outline: none;
+        transition: 0.2s ease;
+    }
+    textarea:focus {
+        border-color: #E53935;
+        box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.10);
+    }
+    .message {
+        padding: 14px 16px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        border: 1px solid transparent;
+    }
+    .success {
+        background: #F0FDF4;
+        color: #166534;
+        border-color: #BBF7D0;
+    }
+    .error {
+        background: #FEF2F2;
+        color: #B91C1C;
+        border-color: #FECACA;
+    }
+
+    /* Rating sao */
+    .star-rating {
+        display: inline-flex;
+        flex-direction: row;
+        gap: 8px;
+        font-size: 38px;
+        line-height: 1;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .star-rating span {
+        color: #ccc;
+        transition: transform 0.15s ease, color 0.15s ease;
+    }
+
+    .star-rating span.active {
+        color: #ffc107;
+    }
+
+    .star-rating span:hover {
+        transform: scale(1.15);
+    }
+
+    .star-rating span:active {
+        transform: scale(1.3);
+    }
+
+    #ratingText {
+        margin-top: 8px;
+        color: #4B5563;
+        font-size: 15px;
+        font-weight: 600;
+        min-height: 20px;
+    }
+
+    .review-display-stars {
+        font-size: 28px;
+        color: #ffc107;
+        margin-bottom: 8px;
+    }
+
+    .review-comment-box {
+        padding: 14px;
+        background: #F8FAFC;
+        border: 1px solid #EEF2F7;
+        border-radius: 12px;
+        white-space: pre-wrap;
+        color: #374151;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .meta-p {
+        font-size: 14px;
+        color: #4B5563;
+        margin: 5px 0;
+    }
+    .meta-p strong {
+        color: #111827;
+    }
+</style>
+
+<div class="review-page-container">
+    <h2>Đánh giá sản phẩm</h2>
+
+    <p style="margin-bottom:20px;">
+        <a class="btn btn-secondary" href="/customer/orders/detail?id=<%= order_id %>">← Quay lại chi tiết đơn hàng</a>
+    </p>
+
+    <% if (success) { %>
+        <div class="message success"><%= success %></div>
+    <% } %>
+
+    <% if (error) { %>
+        <div class="message error"><%= error %></div>
+    <% } %>
+
+    <p class="meta-p"><strong>Mã đơn:</strong> <%= order.order_code %></p>
+    <p class="meta-p"><strong>Sản phẩm:</strong> <%= product.product_name %></p>
+    <p class="meta-p"><strong>Trạng thái đơn:</strong> <%= order.order_status %></p>
+    <hr style="border:0; border-top:1px solid #EEF2F7; margin:20px 0;">
+
+    <% if (existing_review) { %>
+        <div class="message success">
+            Bạn đã đánh giá sản phẩm này rồi.
+        </div>
+
+        <div class="form-group">
+            <label>Số sao đã đánh giá:</label>
+            <div class="review-display-stars">
+                <%
+                const rating = Number(existing_review.rating);
+                for (let i = 1; i <= 5; i++) {
+                %>
+                    <%= i <= rating ? '★' : '☆' %>
+                <% } %>
+            </div>
+            <p style="font-weight:700; color:#111827;"><%= rating %>/5 sao</p>
+        </div>
+
+        <div class="form-group">
+            <label>Nội dung đánh giá:</label>
+            <div class="review-comment-box"><%= existing_review.comment %></div>
+        </div>
+    <% } else { %>
+        <form method="POST" action="/customer/review/submit" id="reviewForm">
+            <input type="hidden" name="order_id" value="<%= order_id %>">
+            <input type="hidden" name="product_id" value="<%= product_id %>">
+
+            <div class="form-group">
+                <label>Đánh giá sao</label>
+                <input type="hidden" name="rating" id="rating" required>
+
+                <div class="star-rating" id="starRating">
+                    <span data-value="1">★</span>
+                    <span data-value="2">★</span>
+                    <span data-value="3">★</span>
+                    <span data-value="4">★</span>
+                    <span data-value="5">★</span>
+                </div>
+
+                <div id="ratingText"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="comment">Nội dung đánh giá</label>
+                <textarea name="comment" id="comment" rows="5" placeholder="Nhập cảm nhận của bạn về sản phẩm..." required></textarea>
+            </div>
+
+            <button class="btn btn-primary" type="submit">Gửi đánh giá</button>
+        </form>
+    <% } %>
+</div>
+
+<% if (!existing_review) { %>
+<script>
+    const stars = document.querySelectorAll('#starRating span');
+    const ratingInput = document.getElementById('rating');
+    const ratingText = document.getElementById('ratingText');
+    const reviewForm = document.getElementById('reviewForm');
+
+    let currentRating = 0;
+
+    const texts = {
+        1: "Rất tệ 😡",
+        2: "Không hài lòng 😞",
+        3: "Bình thường 😐",
+        4: "Tốt 🙂",
+        5: "Rất tốt 😍"
+    };
+
+    function highlightStars(value) {
+        stars.forEach(star => {
+            const starValue = parseInt(star.getAttribute('data-value'));
+            if (starValue <= value) {
+                star.classList.add('active');
+            } else {
+                star.classList.remove('active');
+            }
+        });
+    }
+
+    stars.forEach(star => {
+        star.addEventListener('mouseover', function () {
+            const value = parseInt(this.getAttribute('data-value'));
+            highlightStars(value);
+        });
+
+        star.addEventListener('mouseout', function () {
+            highlightStars(currentRating);
+        });
+
+        star.addEventListener('click', function () {
+            currentRating = parseInt(this.getAttribute('data-value'));
+            ratingInput.value = currentRating;
+            highlightStars(currentRating);
+            ratingText.innerText = texts[currentRating] || '';
+        });
+    });
+
+    reviewForm.addEventListener('submit', function (e) {
+        if (!ratingInput.value) {
+            e.preventDefault();
+            alert('Vui lòng chọn số sao đánh giá.');
+        }
+    });
+</script>
+<% } %>
+
+<%- await include('../partials/footer') %>

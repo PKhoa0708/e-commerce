@@ -1,0 +1,77 @@
+<%- await include('../../partials/header') %>
+
+<h2>Chat với nhân viên bán hàng</h2>
+
+<div style="border:1px solid #ccc; padding:15px; background:#fff; border-radius:6px; max-width: 800px; margin: 20px auto;">
+    <div id="chat-box" style="height:400px; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-bottom:15px; background:#f9f9f9;">
+        Đang tải tin nhắn...
+    </div>
+
+    <form id="chat-form">
+        <input type="hidden" name="conversation_id" value="<%= conversation_id %>">
+
+        <div style="display:flex; gap:10px;">
+            <input
+                type="text"
+                name="message"
+                id="message"
+                placeholder="Nhập tin nhắn..."
+                required
+                style="flex:1; padding:10px; border: 1px solid #ccc; border-radius: 4px;"
+            >
+            <button type="submit" style="padding:10px 16px; background: #e53935; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Gửi</button>
+        </div>
+    </form>
+</div>
+
+<script>
+const conversationId = <%= conversation_id %>;
+const chatBox = document.getElementById('chat-box');
+const chatForm = document.getElementById('chat-form');
+const messageInput = document.getElementById('message');
+
+function loadMessages() {
+    fetch('/customer/chat/fetch?conversation_id=' + conversationId)
+        .then(response => response.text())
+        .then(data => {
+            chatBox.innerHTML = data;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+}
+
+chatForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const messageVal = messageInput.value.trim();
+    if (!messageVal) return;
+
+    fetch('/customer/chat/send', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            conversation_id: conversationId,
+            message: messageVal
+        })
+    })
+    .then(response => response.text())
+    .then(data => {
+        if (data.trim() === 'success') {
+            messageInput.value = '';
+            loadMessages();
+        } else {
+            alert('Gửi tin nhắn thất bại');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Gửi tin nhắn thất bại');
+    });
+});
+
+loadMessages();
+setInterval(loadMessages, 3000);
+</script>
+
+<%- await include('../../partials/footer') %>
