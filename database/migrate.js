@@ -25,31 +25,30 @@ async function run() {
         const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
         console.log('Đang phân tích cú pháp và import dữ liệu từ file SQL...');
 
-        // RegExp tìm toàn bộ lệnh INSERT INTO
+
         const insertRegex = /INSERT INTO `(\w+)` \(([^)]+)\) VALUES\s*([\s\S]*?);/g;
         let match;
         const insertedCounts = {};
         const maxIds = {};
 
-        // Hàm parse các giá trị trong một dòng VALUES của SQL
         function parseSqlValues(valuesStr) {
             const values = [];
             const len = valuesStr.length;
             let i = 0;
             while (i < len) {
-                // Bỏ qua khoảng trắng và dấu phẩy ngăn cách
+
                 while (i < len && ([' ', '\t', '\n', '\r', ','].includes(valuesStr[i]))) {
                     i++;
                 }
                 if (i >= len) break;
 
                 if (valuesStr[i] === "'") {
-                    // Đọc chuỗi ký tự (string)
+
                     let str = "";
-                    i++; // bỏ dấu nháy đơn mở
+                    i++;
                     while (i < len) {
                         if (valuesStr[i] === "'") {
-                            // Kiểm tra xem có bị escape bằng dấu gạch chéo ngược không
+
                             let backslashes = 0;
                             let k = i - 1;
                             while (k >= 0 && valuesStr[k] === '\\') {
@@ -57,7 +56,7 @@ async function run() {
                                 k--;
                             }
                             if (backslashes % 2 === 0) {
-                                i++; // bỏ dấu nháy đơn đóng
+                                i++;
                                 break;
                             }
                         }
@@ -66,11 +65,11 @@ async function run() {
                     }
                     // Unescape ký tự
                     str = str.replace(/\\'/g, "'")
-                             .replace(/\\"/g, '"')
-                             .replace(/\\\\/g, '\\')
-                             .replace(/\\n/g, '\n')
-                             .replace(/\\r/g, '\r')
-                             .replace(/\\t/g, '\t');
+                        .replace(/\\"/g, '"')
+                        .replace(/\\\\/g, '\\')
+                        .replace(/\\n/g, '\n')
+                        .replace(/\\r/g, '\r')
+                        .replace(/\\t/g, '\t');
                     values.push(str);
                 } else {
                     // Đọc số hoặc NULL

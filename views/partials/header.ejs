@@ -16,6 +16,7 @@ if (header_user) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         * {
@@ -354,6 +355,14 @@ if (header_user) {
             padding: 20px;
         }
 
+        /* Đảm bảo tất cả khung nội dung chính và header luôn rộng 95% trên màn hình lớn */
+        .container,
+        .login-container,
+        .lotte-header-inner,
+        .lotte-page-content > div[style*="max-width"] {
+            max-width: 95% !important;
+        }
+
         @media (max-width: 768px) {
             .lotte-header-inner {
                 padding: 12px 16px;
@@ -387,6 +396,22 @@ if (header_user) {
                 right: 0;
             }
         }
+
+        .lotte-nav-link i {
+            margin-right: 6px;
+        }
+
+        @media (max-width: 576px) {
+            .lotte-brand .brand-text {
+                display: none;
+            }
+            .lotte-nav-link i {
+                margin-right: 0;
+            }
+            .lotte-nav-link .nav-text {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -398,20 +423,23 @@ if (header_user) {
         <div class="lotte-header-left">
             <a href="/customer/dashboard" class="lotte-brand">
                 <span class="lotte-brand-logo">🛒</span>
-                <span>Lotte Mart</span>
+                <span class="brand-text">Lotte Mart</span>
             </a>
 
             <% if (session.user_id) { %>
-                <a href="/auth/logout" class="lotte-nav-link logout">
-                    Đăng xuất
+                <a href="/auth/logout" class="lotte-nav-link logout" title="Đăng xuất">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span class="nav-text">Đăng xuất</span>
                 </a>
             <% } else { %>
-                <a href="/auth/login" class="lotte-nav-link outline">
-                    Đăng nhập
+                <a href="/auth/login" class="lotte-nav-link outline" title="Đăng nhập">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span class="nav-text">Đăng nhập</span>
                 </a>
 
-                <a href="/auth/register" class="lotte-nav-link solid">
-                    Đăng ký
+                <a href="/auth/register" class="lotte-nav-link solid" title="Đăng ký">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span class="nav-text">Đăng ký</span>
                 </a>
             <% } %>
         </div>

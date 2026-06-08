@@ -2,7 +2,7 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const url = process.env.MONGO_URI || 'mongodb://localhost:27017';
-const dbName = process.env.DB_NAME || 'lotte_mart';
+const dbName = process.env.DB_NAME || 'banhang_db';
 
 let client;
 let db;
@@ -28,7 +28,7 @@ async function getNextId(collectionName) {
         { $inc: { seq: 1 } },
         { upsert: true, returnDocument: 'after' }
     );
-    // result might be the document directly in newer drivers or { value: doc } in older
+
     if (!result) return 1;
     const seq = result.seq !== undefined ? result.seq : (result.value ? result.value.seq : 1);
     return seq;
@@ -38,9 +38,7 @@ function formatDate(date, format = 'Y-m-d H:i:s') {
     if (!date) return '';
     const d = new Date(date);
     if (isNaN(d.getTime())) return date;
-    
-    // Convert to Vietnam timezone (GMT+7)
-    // Date object internally holds UTC. Let's format it in Asia/Ho_Chi_Minh timezone.
+
     const formatter = new Intl.DateTimeFormat('en-US', {
         timeZone: 'Asia/Ho_Chi_Minh',
         year: 'numeric',
@@ -56,7 +54,6 @@ function formatDate(date, format = 'Y-m-d H:i:s') {
     const map = {};
     parts.forEach(p => { map[p.type] = p.value; });
 
-    // map fields: year, month, day, hour, minute, second
     const year = map.year;
     const month = map.month;
     const day = map.day;
