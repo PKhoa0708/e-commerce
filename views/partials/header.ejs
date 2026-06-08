@@ -355,11 +355,18 @@ if (header_user) {
             padding: 20px;
         }
 
-        /* Đảm bảo tất cả khung nội dung chính và header luôn rộng 95% trên màn hình lớn */
+        /* Đảm bảo tất cả khung nội dung chính (customer, staff, admin) và header luôn rộng 100% trên màn hình lớn */
         .container,
-        .login-container,
         .lotte-header-inner,
+        .orders-page,
+        .profile-page,
         .lotte-page-content > div[style*="max-width"] {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        /* Đảm bảo trang đăng nhập/đăng ký giữ độ rộng 95% để cân đối */
+        .login-container {
             max-width: 95% !important;
         }
 

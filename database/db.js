@@ -2,7 +2,7 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 const url = process.env.MONGO_URI || 'mongodb://localhost:27017';
-const dbName = process.env.DB_NAME || 'banhang_db';
+const dbName = process.env.DB_NAME || 'lotte_mart';
 
 let client;
 let db;
