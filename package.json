@@ -1,0 +1,16 @@
+{
+  "name": "shopee-clone-root",
+  "version": "1.0.0",
+  "description": "Root configuration for Shopee clone using React and Node.js",
+  "main": "index.js",
+  "scripts": {
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "seed": "cd backend && npm run seed"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "dotenv": "^16.4.5"
+  }
+}
