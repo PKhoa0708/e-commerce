@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { authAPI } from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -7,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
     const storedUser = localStorage.getItem('urbancart_user');
@@ -28,20 +28,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (emailOrPhone, password) => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emailOrPhone, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Đăng nhập thất bại.');
-      }
-
+      const data = await authAPI.login(emailOrPhone, password);
       setUser(data.user);
       setToken(data.token);
       localStorage.setItem('urbancart_user', JSON.stringify(data.user));
@@ -55,20 +42,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, emailOrPhone, password) => {
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, emailOrPhone, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Đăng ký thất bại.');
-      }
-
+      const data = await authAPI.register(name, emailOrPhone, password);
       setUser(data.user);
       setToken(data.token);
       localStorage.setItem('urbancart_user', JSON.stringify(data.user));
@@ -80,6 +54,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (googleToken) => {
+    try {
+      const data = await authAPI.loginWithGoogle(googleToken);
+      setUser(data.user);
+      setToken(data.token);
+      localStorage.setItem('urbancart_user', JSON.stringify(data.user));
+      localStorage.setItem('urbancart_token', data.token);
+      return data;
+    } catch (error) {
+      console.error('Google Auth Context Error:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -87,8 +75,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('urbancart_token');
   };
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem('urbancart_user', JSON.stringify(updatedUser));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, register, isAuthenticated: !!token, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, register, loginWithGoogle, isAuthenticated: !!token, loading, updateUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );

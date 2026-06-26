@@ -2,16 +2,17 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
-import { ArrowLeft, ShoppingCart, Star, Heart, Check, Plus, Minus, ShieldCheck, Truck, RefreshCw } from 'lucide-react';
+import { ToastContext } from '../context/ToastContext';
+import { productAPI } from '../services/api';
+import { ArrowLeft, ShoppingCart, Star, Heart, Check, Plus, Minus, ShieldCheck, Truck, RefreshCw, MessageSquare } from 'lucide-react';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, token } = useContext(AuthContext);
-  
-  // CartContext (Giả định CartContext có addToCart, nếu chưa có hoặc lỗi, chúng ta sẽ bắt lỗi và hiển thị thông báo)
+  const { isAuthenticated, token, user } = useContext(AuthContext);
   const cartContext = useContext(CartContext) || {};
   const { addToCart } = cartContext;
+  const { addToast } = useContext(ToastContext) || {};
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,42 +26,51 @@ const ProductDetail = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [actionSuccess, setActionSuccess] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  // Reviews states
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSubmitLoading, setReviewSubmitLoading] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+
+  const fetchReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      const data = await productAPI.getReviews(id);
+      setReviews(data.reviews || []);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
         setErrorMsg('');
-        const res = await fetch(`${API_URL}/products/${id}`);
-        const data = await res.json();
+        const data = await productAPI.getById(id);
 
-        if (res.ok && data.product) {
+        if (data.product) {
           setProduct(data.product);
-          // Set default image
-          if (data.product.images && data.product.images.length > 0) {
-            setSelectedImage(data.product.images[0]);
-          }
-          // Set default variants if available
-          if (data.product.variants?.sizes?.length > 0) {
-            setSelectedSize(data.product.variants.sizes[0]);
-          }
-          if (data.product.variants?.colors?.length > 0) {
-            setSelectedColor(data.product.variants.colors[0]);
-          }
+          if (data.product.images?.length > 0) setSelectedImage(data.product.images[0]);
+          if (data.product.variants?.sizes?.length > 0) setSelectedSize(data.product.variants.sizes[0]);
+          if (data.product.variants?.colors?.length > 0) setSelectedColor(data.product.variants.colors[0]);
         } else {
-          setErrorMsg(data.message || 'Sản phẩm không tồn tại trong hệ thống.');
+          setErrorMsg('Sản phẩm không tồn tại trong hệ thống.');
         }
       } catch (err) {
         console.error('Error fetching product detail:', err);
-        setErrorMsg('Không thể kết nối với máy chủ Backend. Vui lòng thử lại sau.');
+        setErrorMsg(err.message || 'Không thể kết nối với máy chủ Backend.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchProduct();
-  }, [id, API_URL]);
+    fetchReviews();
+  }, [id]);
 
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -78,21 +88,24 @@ const ProductDetail = () => {
     if (!product) return;
 
     if (product.variants?.sizes?.length > 0 && !selectedSize) {
+      addToast?.({ message: 'Vui lòng chọn Kích thước trước!', type: 'error' });
       setErrorMsg('Vui lòng chọn Kích thước.');
       return;
     }
     if (product.variants?.colors?.length > 0 && !selectedColor) {
+      addToast?.({ message: 'Vui lòng chọn Màu sắc trước!', type: 'error' });
       setErrorMsg('Vui lòng chọn Màu sắc.');
       return;
     }
+    setErrorMsg('');
 
     if (addToCart) {
       addToCart(product, quantity, { size: selectedSize, color: selectedColor });
-      setActionSuccess('Đã thêm sản phẩm vào giỏ hàng thành công!');
-      setTimeout(() => setActionSuccess(''), 3000);
-    } else {
-      // Mock fallback if CartContext is skeleton
-      alert(`Đã thêm vào giỏ hàng: ${product.name} (SL: ${quantity}, Size: ${selectedSize}, Màu: ${selectedColor})`);
+      addToast?.({
+        message: `Đã thêm "${product.name}" vào giỏ hàng!`,
+        type: 'cart',
+        duration: 3000,
+      });
     }
   };
 
@@ -100,18 +113,89 @@ const ProductDetail = () => {
     if (!product) return;
 
     if (product.variants?.sizes?.length > 0 && !selectedSize) {
+      addToast?.({ message: 'Vui lòng chọn Kích thước trước!', type: 'error' });
       setErrorMsg('Vui lòng chọn Kích thước.');
       return;
     }
     if (product.variants?.colors?.length > 0 && !selectedColor) {
+      addToast?.({ message: 'Vui lòng chọn Màu sắc trước!', type: 'error' });
       setErrorMsg('Vui lòng chọn Màu sắc.');
       return;
     }
+    setErrorMsg('');
 
     if (addToCart) {
       addToCart(product, quantity, { size: selectedSize, color: selectedColor });
     }
     navigate('/cart');
+  };
+
+  const handleChatNow = () => {
+    if (!product) return;
+    const sellerId = product.seller?._id || product.seller;
+    if (!sellerId) return;
+
+    if (!isAuthenticated) {
+      addToast?.({ message: 'Vui lòng đăng nhập để chat!', type: 'error' });
+      navigate('/login');
+      return;
+    }
+
+    if (sellerId.toString() === (user?.id || user?._id || '').toString()) {
+      addToast?.({ message: 'Đây là sản phẩm của chính bạn!', type: 'error' });
+      return;
+    }
+
+    navigate(`/chat?sellerId=${sellerId}&productId=${product._id}`);
+  };
+
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!reviewComment.trim()) {
+      setReviewError('Vui lòng nhập nội dung đánh giá sản phẩm.');
+      return;
+    }
+    setReviewSubmitLoading(true);
+    setReviewError('');
+    try {
+      await productAPI.addReview(token, id, { rating: reviewRating, comment: reviewComment });
+      setReviewComment('');
+      setReviewRating(5);
+      // Reload reviews and product detail to update average rating
+      fetchReviews();
+      const updated = await productAPI.getById(id);
+      if (updated.product) {
+        setProduct(updated.product);
+      }
+      addToast?.({ message: 'Cập nhật đánh giá thành công!', type: 'success' });
+    } catch (err) {
+      console.error('Error adding review:', err);
+      setReviewError(err.message || 'Không thể đăng đánh giá.');
+    } finally {
+      setReviewSubmitLoading(false);
+    }
+  };
+
+  const renderStars = (ratingCount, interactive = false) => {
+    return (
+      <div className="flex gap-0.5 text-amber-500">
+        {[...Array(5)].map((_, i) => {
+          const starValue = i + 1;
+          return (
+            <Star
+              key={i}
+              onClick={() => interactive && setReviewRating(starValue)}
+              className={`w-4 h-4 ${
+                starValue <= (interactive ? reviewRating : ratingCount)
+                  ? 'fill-current text-amber-500'
+                  : 'text-slate-200'
+              } ${interactive ? 'cursor-pointer hover:scale-110 transition' : ''}`}
+            />
+          );
+        })}
+      </div>
+    );
   };
 
   // Render Loading Skeleton
@@ -369,6 +453,13 @@ const ProductDetail = () => {
               <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
                 <button
                   type="button"
+                  onClick={handleChatNow}
+                  className="px-6 py-3.5 border border-slate-200 text-slate-600 hover:border-[#e47937] hover:text-[#e47937] hover:bg-orange-50/10 font-extrabold rounded-full text-sm flex items-center justify-center gap-2 transition cursor-pointer select-none active:scale-98"
+                >
+                  <MessageSquare className="w-4.5 h-4.5 text-[#e47937]" /> Chat ngay
+                </button>
+                <button
+                  type="button"
                   onClick={handleAddToCart}
                   disabled={product.stockQuantity === 0}
                   className="flex-1 px-8 py-3.5 border border-[#e47937] text-[#e47937] hover:bg-orange-50 disabled:bg-slate-100 disabled:border-slate-200 disabled:text-slate-400 font-extrabold rounded-full text-sm flex items-center justify-center gap-2 transition cursor-pointer select-none active:scale-98"
@@ -400,7 +491,7 @@ const ProductDetail = () => {
           </div>
 
           {/* Core premium policies grid */}
-          <div className="mt-12 bg-slate-50 rounded-2xl p-6 border border-slate-100/50 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-xs font-extrabold text-slate-600">
+          <div className="mt-12 bg-slate-50 rounded-2xl p-6 border border-slate-100/50 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-xs font-extrabold text-slate-600 mb-12">
             <div className="flex flex-col items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-[#e47937]" />
               <span>Chính Hãng 100%</span>
@@ -415,6 +506,139 @@ const ProductDetail = () => {
               <RefreshCw className="w-6 h-6 text-[#e47937]" />
               <span>7 Ngày Đổi Trả</span>
               <span className="text-[10px] text-slate-400 font-medium font-sans">Miễn phí đổi hàng nếu không vừa size</span>
+            </div>
+          </div>
+
+          {/* 4. ĐÁNH GIÁ & BÌNH LUẬN */}
+          <div className="pt-10 border-t border-slate-100">
+            <div className="flex items-center gap-2 mb-6">
+              <MessageSquare className="w-6 h-6 text-[#e47937]" />
+              <h2 className="text-xl font-black text-slate-800 tracking-tight">Đánh Giá & Nhận Xét</h2>
+              <span className="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full font-extrabold ml-1">
+                {reviews.length} nhận xét
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Left Column: Overall score & reviews list */}
+              <div className="lg:col-span-2 space-y-6">
+                
+                {reviewsLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(2)].map((_, i) => (
+                      <div key={i} className="bg-slate-50 rounded-2xl p-4 border border-slate-100 animate-pulse space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+                          <div className="h-3 bg-slate-200 rounded w-1/6"></div>
+                        </div>
+                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <div className="bg-slate-50 rounded-2xl p-8 border border-slate-100 text-center text-slate-400 text-sm font-semibold">
+                    Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên nhận xét!
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            {/* User Avatar Initial */}
+                            <div className="w-9 h-9 bg-slate-100 border border-slate-200 text-slate-600 rounded-full flex items-center justify-center text-xs font-black">
+                              {review.user?.name?.trim()[0]?.toUpperCase() || 'U'}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-800">{review.user?.name || 'Thành viên UrbanCart'}</span>
+                                {review.isVerifiedBuyer && (
+                                  <span className="text-[9px] bg-green-50 text-green-600 font-extrabold px-1.5 py-0.5 rounded border border-green-100 flex items-center gap-0.5">
+                                    <Check className="w-2.5 h-2.5 stroke-[3]" /> Đã mua hàng
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-slate-400 font-semibold">
+                                {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {renderStars(review.rating)}
+                        </div>
+                        
+                        <p className="text-slate-600 text-xs font-medium leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-50">
+                          {review.comment}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Add Review Form */}
+              <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100/50 h-fit space-y-5">
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider border-b border-slate-200/60 pb-2">
+                  Viết Đánh Giá Của Bạn
+                </h3>
+
+                {isAuthenticated ? (
+                  <form onSubmit={handleReviewSubmit} className="space-y-4">
+                    {reviewError && (
+                      <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold">
+                        {reviewError}
+                      </div>
+                    )}
+
+                    {/* Star Rating select */}
+                    <div className="space-y-1.5">
+                      <span className="block text-xs font-bold text-slate-700">Mức độ hài lòng *</span>
+                      <div className="flex items-center gap-1.5 bg-white p-3 rounded-xl border border-slate-200/60">
+                        {renderStars(reviewRating, true)}
+                        <span className="text-xs font-bold text-slate-500 ml-1">
+                          {reviewRating === 5 ? 'Tuyệt vời' : reviewRating === 4 ? 'Hài lòng' : reviewRating === 3 ? 'Bình thường' : reviewRating === 2 ? 'Không hài lòng' : 'Tệ'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Comment text */}
+                    <div className="space-y-1.5">
+                      <span className="block text-xs font-bold text-slate-700">Nhận xét chi tiết *</span>
+                      <textarea
+                        required
+                        rows="4"
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        placeholder="Hãy chia sẻ đánh giá của bạn về chất lượng sản phẩm, phom dáng và dịch vụ vận chuyển nhé..."
+                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200/80 rounded-xl focus:outline-none focus:border-[#e47937] focus:ring-4 focus:ring-orange-500/5 text-xs font-medium transition"
+                      ></textarea>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={reviewSubmitLoading}
+                      className="w-full py-3 bg-[#1a3150] hover:bg-[#152740] disabled:bg-slate-300 text-white font-extrabold rounded-full text-xs shadow-md transition cursor-pointer active:scale-98"
+                    >
+                      {reviewSubmitLoading ? 'Đang gửi...' : 'Đăng nhận xét'}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="text-center py-6 space-y-4">
+                    <p className="text-slate-400 text-xs font-semibold leading-relaxed">
+                      Bạn cần đăng nhập tài khoản UrbanCart để gửi đánh giá cho sản phẩm này.
+                    </p>
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="px-6 py-2.5 bg-[#1a3150] hover:bg-[#152740] text-white font-bold rounded-full text-xs shadow-sm cursor-pointer"
+                    >
+                      Đăng nhập ngay
+                    </button>
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
 

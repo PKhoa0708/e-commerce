@@ -12,9 +12,15 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, unique: true, sparse: true, trim: true, lowercase: true, index: true },
   phone: { type: String, default: null },
-  password: { type: String, required: true },
+  password: { 
+    type: String, 
+    required: function() {
+      return this.authProvider === 'local';
+    }
+  },
   authProvider: { type: String, default: 'local' },
   role: { type: String, default: 'customer', enum: ['customer', 'seller', 'admin'] },
+  avatar: { type: String, default: null },
   addresses: [addressSchema]
 }, {
   timestamps: true // Automatically creates createdAt and updatedAt
@@ -22,7 +28,7 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving to DB
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.password || !this.isModified('password')) return next();
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

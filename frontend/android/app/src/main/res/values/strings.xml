@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">UrbanCart</string>
+    <string name="title_activity_main">UrbanCart</string>
+    <string name="package_name">com.urbancart.app</string>
+    <string name="custom_url_scheme">com.urbancart.app</string>
+</resources>

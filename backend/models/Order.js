@@ -1,26 +1,49 @@
 const mongoose = require('mongoose');
 
 const orderItemSchema = new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  name: { type: String, required: true },
-  selectedColor: { type: String },
-  selectedSize: { type: String },
+  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  name: { type: String, required: true },       // snapshot tên sản phẩm
+  image: { type: String, default: '' },          // snapshot ảnh
+  price: { type: Number, required: true },       // snapshot giá tại thời điểm mua
   quantity: { type: Number, required: true, min: 1 },
-  price: { type: Number, required: true }
+  size: { type: String, default: '' },
+  color: { type: String, default: '' },
 });
 
 const orderSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   items: [orderItemSchema],
-  totalPrice: { type: Number, required: true },
-  shippingFee: { type: Number, required: true, default: 0 },
-  finalTotal: { type: Number, required: true },
-  shippingAddress: { type: String, required: true },
-  phone: { type: String, required: true },
-  paymentMethod: { type: String, required: true },
-  status: { type: String, default: 'pending', enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] }
-}, {
-  timestamps: true // Automatically creates createdAt and updatedAt
-});
+  shippingInfo: {
+    fullName: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    note: { type: String, default: '' },
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['cod', 'bank', 'momo', 'vnpay'],
+    default: 'cod',
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed'],
+    default: 'pending',
+  },
+  paymentDetails: {
+    transactionId: { type: String, default: '' },
+    paymentDate: { type: Date },
+    vnpTxnRef: { type: String, default: '' },
+    vnpTransactionNo: { type: String, default: '' }
+  },
+  subtotal: { type: Number, required: true },
+  shippingFee: { type: Number, default: 30000 },
+  total: { type: Number, required: true },
+  status: {
+    type: String,
+    enum: ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'],
+    default: 'pending',
+  },
+}, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

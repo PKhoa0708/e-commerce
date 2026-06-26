@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: urbancart-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false # User will input their MongoDB Atlas connection string
+      - key: JWT_SECRET
+        generateValue: true # Render will automatically generate a secure JWT secret
+      - key: VNP_TMNCODE
+        sync: false # User will input their VNPay TMNCODE
+      - key: VNP_HASHSECRET
+        sync: false # User will input their VNPay HashSecret
+      - key: VNP_URL
+        value: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+      - key: VNP_RETURNURL
+        value: http://localhost:5173/checkout/vnpay-return

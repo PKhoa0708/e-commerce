@@ -102,7 +102,7 @@ exports.getProductById = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(id);
+    const product = await Product.findById(id).populate('seller', 'name email role');
 
     if (!product) {
       return res.status(404).json({
@@ -123,3 +123,103 @@ exports.getProductById = async (req, res) => {
     });
   }
 };
+
+// PUT /api/products/:id (Yêu cầu đăng nhập, là chủ sở hữu)
+exports.updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, category, images, variants, stockQuantity } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Sản phẩm không tồn tại.'
+      });
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Sản phẩm không tồn tại.'
+      });
+    }
+
+    // Kiểm tra quyền sở hữu
+    if (product.seller.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Bạn không có quyền chỉnh sửa sản phẩm này.'
+      });
+    }
+
+    // Cập nhật thông tin
+    if (name !== undefined) product.name = name;
+    if (description !== undefined) product.description = description;
+    if (price !== undefined) product.price = Number(price);
+    if (category !== undefined) product.category = category;
+    if (images !== undefined) product.images = images;
+    if (variants !== undefined) product.variants = variants;
+    if (stockQuantity !== undefined) product.stockQuantity = Number(stockQuantity);
+
+    const updatedProduct = await product.save();
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Cập nhật sản phẩm thành công.',
+      product: updatedProduct
+    });
+  } catch (error) {
+    console.error('Error in updateProduct:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Đã xảy ra lỗi hệ thống khi chỉnh sửa sản phẩm. Vui lòng thử lại sau.'
+    });
+  }
+};
+
+// DELETE /api/products/:id (Yêu cầu đăng nhập, là chủ sở hữu)
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Sản phẩm không tồn tại.'
+      });
+    }
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Sản phẩm không tồn tại.'
+      });
+    }
+
+    // Kiểm tra quyền sở hữu
+    if (product.seller.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Bạn không có quyền xóa sản phẩm này.'
+      });
+    }
+
+    await Product.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Xóa sản phẩm thành công.'
+    });
+  } catch (error) {
+    console.error('Error in deleteProduct:', error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Đã xảy ra lỗi hệ thống khi xóa sản phẩm. Vui lòng thử lại sau.'
+    });
+  }
+};
+

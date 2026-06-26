@@ -1,13 +1,62 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ArrowLeft, Tag, DollarSign, Image, Layers, Package, Clipboard, AlertCircle } from 'lucide-react';
+import { productAPI } from '../services/api';
+import { ArrowLeft, Tag, DollarSign, Image, Layers, Package, Clipboard, AlertCircle, Upload, Trash } from 'lucide-react';
+
+// Async helper to process image files for maximum sharpness
+const processFile = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      
+      // If file is smaller than 1.5MB, keep original raw data URL to preserve 100% sharpness
+      if (file.size < 1.5 * 1024 * 1024) {
+        resolve(dataUrl);
+        return;
+      }
+      
+      // If file is large, scale to max 1920px with 98% quality canvas compression
+      const img = new window.Image();
+      img.src = dataUrl;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1920;
+        
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Export high-quality data
+        resolve(canvas.toDataURL(file.type || 'image/jpeg', 0.98));
+      };
+      img.onerror = () => {
+        // Fallback to original if canvas loading fails
+        resolve(dataUrl);
+      };
+    };
+    reader.onerror = (err) => reject(err);
+    reader.readAsDataURL(file);
+  });
+};
 
 const SellProduct = () => {
   const { token, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
-
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   // State form fields
   const [name, setName] = useState('');
@@ -15,7 +64,7 @@ const SellProduct = () => {
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('Thời trang'); // Default category
   const [stockQuantity, setStockQuantity] = useState('10'); // Default stock
-  const [imageUrl, setImageUrl] = useState('');
+  const [images, setImages] = useState([]); // Base64 images array
   const [sizes, setSizes] = useState('');
   const [colors, setColors] = useState('');
 
@@ -30,6 +79,57 @@ const SellProduct = () => {
       navigate('/login');
     }
   }, [isAuthenticated, navigate]);
+
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const readPromises = files.map(file => processFile(file));
+      const results = await Promise.all(readPromises);
+      setImages(prev => [...prev, ...results]);
+    } catch (err) {
+      console.error('Error reading files:', err);
+      setErrorMsg('Không thể đọc hoặc xử lý một số tệp hình ảnh. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files || []);
+    const imgFiles = files.filter(f => f.type.startsWith('image/'));
+    if (imgFiles.length === 0) return;
+
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const readPromises = imgFiles.map(file => processFile(file));
+      const results = await Promise.all(readPromises);
+      setImages(prev => [...prev, ...results]);
+    } catch (err) {
+      console.error('Error reading files:', err);
+      setErrorMsg('Không thể xử lý một số tệp hình ảnh kéo thả.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    setImages(prev => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleSetCover = (index) => {
+    setImages(prev => {
+      const copy = [...prev];
+      const target = copy[index];
+      copy.splice(index, 1);
+      return [target, ...copy]; // Move to index 0 (will be prioritized as avatar/cover)
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,12 +153,12 @@ const SellProduct = () => {
 
     setLoading(true);
 
-    // Xử lý ảnh (mảng chuỗi)
-    const imagesArray = imageUrl.trim() 
-      ? imageUrl.split(',').map(url => url.trim()).filter(url => url.length > 0)
-      : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=60']; // Ảnh mặc định nếu bỏ trống
+    // Default image array fallback if empty
+    const imagesArray = images.length > 0
+      ? images
+      : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=60'];
 
-    // Xử lý variants (sizes, colors)
+    // Handle variants (sizes, colors)
     const sizesArray = sizes.trim()
       ? sizes.split(',').map(s => s.trim()).filter(s => s.length > 0)
       : [];
@@ -80,37 +180,19 @@ const SellProduct = () => {
     };
 
     try {
-      const res = await fetch(`${API_URL}/products`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(productData)
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setSuccessMsg('Đăng bán sản phẩm thành công! Đang chuyển hướng...');
-        // Reset form
-        setName('');
-        setDescription('');
-        setPrice('');
-        setImageUrl('');
-        setSizes('');
-        setColors('');
-        setStockQuantity('10');
-        
-        setTimeout(() => {
-          navigate('/my-products');
-        }, 1500);
-      } else {
-        setErrorMsg(data.message || 'Có lỗi xảy ra khi tạo sản phẩm.');
-      }
+      const data = await productAPI.create(token, productData);
+      setSuccessMsg('Đăng bán sản phẩm thành công! Đang chuyển hướng...');
+      setName('');
+      setDescription('');
+      setPrice('');
+      setImages([]);
+      setSizes('');
+      setColors('');
+      setStockQuantity('10');
+      setTimeout(() => navigate('/my-products'), 1500);
     } catch (err) {
       console.error('Error creating product:', err);
-      setErrorMsg('Không thể kết nối với máy chủ Backend.');
+      setErrorMsg(err.message || 'Có lỗi xảy ra khi tạo sản phẩm.');
     } finally {
       setLoading(false);
     }
@@ -252,23 +334,79 @@ const SellProduct = () => {
                   />
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Link hình ảnh sản phẩm</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
-                    <Image className="w-4.5 h-4.5" />
-                  </div>
-                  <input
-                    type="text"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="Nhiều link phân cách bằng dấu phẩy (,)"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-[#e47937] focus:ring-4 focus:ring-orange-500/5 text-sm font-medium transition"
-                  />
+            {/* Product Image Upload Section */}
+            <div className="space-y-4">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Hình ảnh sản phẩm</label>
+              
+              {/* Dropzone container */}
+              <div 
+                onClick={() => document.getElementById('file-upload-input').click()}
+                onDragOver={(e) => { e.preventDefault(); }}
+                onDrop={handleDrop}
+                className="border-2 border-dashed border-slate-200 hover:border-[#e47937] hover:bg-orange-50/10 rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 select-none group flex flex-col items-center justify-center min-h-[140px]"
+              >
+                <input
+                  type="file"
+                  id="file-upload-input"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-[#e47937] group-hover:bg-orange-50 transition-all duration-200 mb-2.5 shadow-sm border border-slate-100">
+                  <Upload className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] text-slate-400 font-semibold block mt-1">Để trống để hệ thống tự động tạo ảnh demo.</span>
+                <p className="text-xs font-bold text-slate-600 group-hover:text-slate-800">
+                  Kéo thả ảnh vào đây hoặc <span className="text-[#e47937] underline">Chọn từ thiết bị</span>
+                </p>
+                <p className="text-[10px] text-slate-400 font-semibold mt-1">Hỗ trợ JPG, PNG, WEBP... Chọn nhiều ảnh cùng lúc.</p>
               </div>
+
+              {/* Thumbnails grid */}
+              {images.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                  {images.map((img, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`group/thumb relative aspect-square rounded-2xl overflow-hidden border bg-slate-50 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01] ${idx === 0 ? 'border-orange-500 ring-2 ring-orange-500/10' : 'border-slate-200'}`}
+                    >
+                      <img
+                        src={img}
+                        alt={`Product preview ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      
+                      {/* Cover image badge */}
+                      {idx === 0 ? (
+                        <span className="absolute top-2 left-2 px-2.5 py-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-[9px] uppercase tracking-wider rounded-lg shadow-sm border border-orange-400/30 z-10">
+                          Ảnh đại diện
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleSetCover(idx); }}
+                          className="absolute top-2 left-2 opacity-0 group-hover/thumb:opacity-100 bg-white/90 backdrop-blur-sm text-slate-700 hover:text-orange-500 hover:bg-white font-extrabold text-[9px] px-2.5 py-1.5 rounded-lg border border-slate-200 transition-all shadow-sm cursor-pointer z-10"
+                        >
+                          Đặt làm ảnh đại diện
+                        </button>
+                      )}
+
+                      {/* Delete button */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                        className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full transition shadow-md cursor-pointer active:scale-90 z-10"
+                      >
+                        <Trash className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <span className="text-[10px] text-slate-400 font-semibold block mt-1">Để trống để hệ thống tự động tạo ảnh demo. Ảnh đầu tiên sẽ là ảnh đại diện hiển thị trong danh sách.</span>
             </div>
 
             {/* Variants Section */}
